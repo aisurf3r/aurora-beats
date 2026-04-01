@@ -171,6 +171,19 @@ export function ControlPanel({
               <span className="text-[10px] text-muted-foreground font-display tracking-wider">LISTENING</span>
             </div>
           )}
+
+          {/* GitHub link */}
+          <div className="flex justify-end pt-1">
+            <a
+              href="https://github.com/aisurf3r/Music-Visualizer"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-colors"
+              title="View on GitHub"
+            >
+              <Github className="w-4 h-4" />
+            </a>
+          </div>
         </div>
       )}
     </div>

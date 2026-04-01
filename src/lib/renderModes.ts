@@ -507,7 +507,7 @@ export const MODES: VisualizationMode[] = [
   { name: 'Particle Galaxy', icon: '✨', render: renderParticles },
   { name: 'Liquid Blob', icon: '💧', render: renderBlob },
   { name: 'Tunnel', icon: '🌀', render: renderTunnel },
-  { name: 'Fractal Tree', icon: '🌿', render: renderFractal },
+  { name: 'DNA Helix', icon: '🧬', render: renderDNA },
   { name: 'Neon Sphere', icon: '🔵', render: renderSphere },
   { name: 'Shockwave', icon: '💥', render: renderShockwave },
 ];
