@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { MODES, PALETTE_NAMES, type PaletteName } from '@/lib/renderModes';
-import { Mic, Upload, Monitor, Shuffle, Eye, EyeOff, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Mic, Upload, Monitor, Shuffle, Eye, EyeOff, X, ChevronDown, ChevronUp, Github } from 'lucide-react';
 
 interface ControlPanelProps {
   currentMode: number;
@@ -119,12 +119,12 @@ export function ControlPanel({
           {/* Palette */}
           <div>
             <label className="text-[10px] font-display tracking-wider text-muted-foreground uppercase mb-1.5 block">Color Palette</label>
-            <div className="flex gap-1">
+            <div className="grid grid-cols-5 gap-1">
               {PALETTE_NAMES.map(p => (
                 <button
                   key={p}
                   onClick={() => setPalette(p)}
-                  className={`flex-1 p-1.5 rounded-lg text-[9px] font-display tracking-wider capitalize transition-all ${
+                  className={`p-1.5 rounded-lg text-[8px] font-display tracking-wider capitalize transition-all ${
                     palette === p
                       ? 'bg-primary/20 text-primary border border-primary/30'
                       : 'bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent'
@@ -171,6 +171,19 @@ export function ControlPanel({
               <span className="text-[10px] text-muted-foreground font-display tracking-wider">LISTENING</span>
             </div>
           )}
+
+          {/* GitHub link */}
+          <div className="flex justify-end pt-1">
+            <a
+              href="https://github.com/aisurf3r/Music-Visualizer"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-colors"
+              title="View on GitHub"
+            >
+              <Github className="w-4 h-4" />
+            </a>
+          </div>
         </div>
       )}
     </div>
