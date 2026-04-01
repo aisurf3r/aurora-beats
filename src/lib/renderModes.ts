@@ -325,43 +325,70 @@ function renderTunnel(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h:
   ctx.shadowBlur = 0;
 }
 
-// ─── MODE 6: Fractal Tree ───
-function drawBranch(ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, len: number, depth: number, maxDepth: number, d: AudioData, t: number, pal: PaletteName, sens: number) {
-  if (depth > maxDepth || len < 3) return;
-
-  const fi = (depth * 20) % d.frequencyData.length;
-  const val = (d.frequencyData[fi] || 0) / 255 * sens;
-  const endX = x + Math.cos(angle) * len;
-  const endY = y + Math.sin(angle) * len;
-
-  const [ch, cs, cl] = getColor(pal, depth, t);
-  ctx.beginPath();
-  ctx.moveTo(x, y);
-  ctx.lineTo(endX, endY);
-  ctx.strokeStyle = hsla(ch, cs, cl, 0.5 + val * 0.5);
-  ctx.lineWidth = Math.max(0.5, (maxDepth - depth) * 1.5);
-  ctx.shadowBlur = val * 15;
-  ctx.shadowColor = hsl(ch, cs, cl);
-  ctx.stroke();
-
-  const spread = 0.3 + val * 0.8;
-  const shrink = 0.65 + val * 0.15;
-  drawBranch(ctx, endX, endY, angle - spread, len * shrink, depth + 1, maxDepth, d, t, pal, sens);
-  drawBranch(ctx, endX, endY, angle + spread, len * shrink, depth + 1, maxDepth, d, t, pal, sens);
-}
-
-function renderFractal(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h: number, t: number, pal: PaletteName, sens: number) {
-  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+// ─── MODE 6: DNA Helix ───
+function renderDNA(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h: number, t: number, pal: PaletteName, sens: number) {
+  ctx.fillStyle = 'rgba(0,0,0,0.12)';
   ctx.fillRect(0, 0, w, h);
 
-  const cx = w / 2, cy = h;
-  const baseLen = Math.min(w, h) * 0.18 * (0.7 + d.energy * 0.5 * sens);
-  const maxDepth = 8 + Math.floor(d.energy * 3);
+  const cx = w / 2, cy = h / 2;
+  const strands = 60;
+  const helixH = h * 0.7;
+  const startY = cy - helixH / 2;
+  const radius = Math.min(w, h) * 0.15;
 
-  ctx.save();
-  ctx.translate(0, 0);
-  drawBranch(ctx, cx, cy, -Math.PI / 2 + Math.sin(t * 0.5) * 0.1, baseLen, 0, Math.min(maxDepth, 11), d, t, pal, sens);
-  ctx.restore();
+  for (let strand = 0; strand < 2; strand++) {
+    const phaseOffset = strand * Math.PI;
+    ctx.beginPath();
+    for (let i = 0; i <= strands; i++) {
+      const progress = i / strands;
+      const y = startY + progress * helixH;
+      const fi = Math.floor(progress * d.frequencyData.length * 0.5);
+      const fVal = (d.frequencyData[fi] || 0) / 255 * sens;
+      const angle = progress * Math.PI * 4 + t * 2 + phaseOffset;
+      const x = cx + Math.cos(angle) * (radius + fVal * 60);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    const [ch, cs, cl] = getColor(pal, strand, t);
+    ctx.strokeStyle = hsla(ch, cs, cl, 0.8);
+    ctx.lineWidth = 2.5;
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = hsl(ch, cs, cl);
+    ctx.stroke();
+  }
+
+  // Cross bars
+  for (let i = 0; i < strands; i += 3) {
+    const progress = i / strands;
+    const y = startY + progress * helixH;
+    const fi = Math.floor(progress * d.frequencyData.length * 0.5);
+    const fVal = (d.frequencyData[fi] || 0) / 255 * sens;
+    const angle1 = progress * Math.PI * 4 + t * 2;
+    const angle2 = angle1 + Math.PI;
+    const x1 = cx + Math.cos(angle1) * (radius + fVal * 60);
+    const x2 = cx + Math.cos(angle2) * (radius + fVal * 60);
+
+    const [ch, cs, cl] = getColor(pal, i % 4, t);
+    ctx.beginPath();
+    ctx.moveTo(x1, y);
+    ctx.lineTo(x2, y);
+    ctx.strokeStyle = hsla(ch, cs, cl, 0.3 + fVal * 0.5);
+    ctx.lineWidth = 1 + fVal * 3;
+    ctx.shadowBlur = fVal * 25;
+    ctx.shadowColor = hsl(ch, cs, cl);
+    ctx.stroke();
+
+    const nodeSize = 2 + fVal * 6;
+    ctx.beginPath();
+    ctx.arc(x1, y, nodeSize, 0, Math.PI * 2);
+    ctx.fillStyle = hsla(ch, cs, cl + 10, 0.6 + fVal * 0.4);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x2, y, nodeSize, 0, Math.PI * 2);
+    ctx.fillStyle = hsla(ch, cs, cl + 10, 0.6 + fVal * 0.4);
+    ctx.fill();
+  }
+
   ctx.shadowBlur = 0;
 }
 
