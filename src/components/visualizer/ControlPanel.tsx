@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { MODES, PALETTE_NAMES, type PaletteName } from '@/lib/renderModes';
-import { Mic, Upload, Monitor, Shuffle, Eye, EyeOff, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Mic, Upload, Monitor, Shuffle, Eye, EyeOff, X, ChevronDown, ChevronUp, Github } from 'lucide-react';
 
 interface ControlPanelProps {
   currentMode: number;
