@@ -14,8 +14,8 @@ const PALS: Record<PaletteName, HSL[]> = {
   rainbow:    [], // handled dynamically
   synthwave:  [[280,100,60],[320,100,55],[200,100,65],[260,90,50]],
   toxic:      [[120,100,45],[90,100,50],[150,80,55],[60,100,60]],
-  sunset:     [[15,100,60],[35,100,55],[350,90,50],[45,100,65]],
-  ice:        [[200,80,75],[210,90,65],[190,70,80],[220,85,60]],
+  sunset:     [[35,95,60],[310,80,55],[45,100,70],[280,60,65]],
+  ice:        [[175,70,70],[260,60,75],[140,50,65],[300,40,72]],
   galaxy:     [[270,80,45],[300,70,55],[240,90,50],[330,60,60]],
 };
 
@@ -325,68 +325,72 @@ function renderTunnel(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h:
   ctx.shadowBlur = 0;
 }
 
-// ─── MODE 6: DNA Helix ───
-function renderDNA(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h: number, t: number, pal: PaletteName, sens: number) {
-  ctx.fillStyle = 'rgba(0,0,0,0.12)';
+// ─── MODE 6: Waveform 3D ───
+function renderWaveform3D(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h: number, t: number, pal: PaletteName, sens: number) {
+  ctx.fillStyle = 'rgba(0,0,0,0.1)';
   ctx.fillRect(0, 0, w, h);
 
-  const cx = w / 2, cy = h / 2;
-  const strands = 60;
-  const helixH = h * 0.7;
-  const startY = cy - helixH / 2;
-  const radius = Math.min(w, h) * 0.15;
+  const layers = 30;
+  const points = 128;
+  const layerSpacing = h / (layers + 4);
+  const startY = h * 0.12;
 
-  for (let strand = 0; strand < 2; strand++) {
-    const phaseOffset = strand * Math.PI;
+  for (let layer = layers - 1; layer >= 0; layer--) {
+    const layerProgress = layer / layers;
+    const yBase = startY + layer * layerSpacing;
+    const depth = 1 - layerProgress * 0.6;
+    const xMargin = w * 0.05 + layerProgress * w * 0.08;
+    const usableW = w - xMargin * 2;
+
+    const [ch, cs, cl] = getColor(pal, layer, t);
+    const alpha = 0.3 + (1 - layerProgress) * 0.7;
+
     ctx.beginPath();
-    for (let i = 0; i <= strands; i++) {
-      const progress = i / strands;
-      const y = startY + progress * helixH;
-      const fi = Math.floor(progress * d.frequencyData.length * 0.5);
-      const fVal = (d.frequencyData[fi] || 0) / 255 * sens;
-      const angle = progress * Math.PI * 4 + t * 2 + phaseOffset;
-      const x = cx + Math.cos(angle) * (radius + fVal * 60);
+    for (let i = 0; i < points; i++) {
+      const x = xMargin + (i / (points - 1)) * usableW;
+      const freqIdx = Math.floor((i / points) * d.frequencyData.length * 0.6);
+      const timeIdx = Math.floor((i / points) * d.timeDomainData.length);
+      const fVal = (d.frequencyData[freqIdx] || 0) / 255 * sens;
+      const tVal = (d.timeDomainData[timeIdx] || 128) / 128 - 1;
+
+      const wave = Math.sin(i * 0.08 + t * 2.5 + layer * 0.5) * 15;
+      const amplitude = (fVal * 60 + tVal * 30 + wave) * depth;
+      const y = yBase - amplitude;
+
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
-    const [ch, cs, cl] = getColor(pal, strand, t);
-    ctx.strokeStyle = hsla(ch, cs, cl, 0.8);
-    ctx.lineWidth = 2.5;
-    ctx.shadowBlur = 20;
+
+    // Close the shape for fill
+    ctx.lineTo(xMargin + usableW, yBase + layerSpacing);
+    ctx.lineTo(xMargin, yBase + layerSpacing);
+    ctx.closePath();
+
+    const grad = ctx.createLinearGradient(0, yBase - 80, 0, yBase + layerSpacing);
+    grad.addColorStop(0, hsla(ch, cs, cl, alpha * 0.4));
+    grad.addColorStop(1, hsla(ch, cs, cl, 0));
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Stroke the top waveform line
+    ctx.beginPath();
+    for (let i = 0; i < points; i++) {
+      const x = xMargin + (i / (points - 1)) * usableW;
+      const freqIdx = Math.floor((i / points) * d.frequencyData.length * 0.6);
+      const timeIdx = Math.floor((i / points) * d.timeDomainData.length);
+      const fVal = (d.frequencyData[freqIdx] || 0) / 255 * sens;
+      const tVal = (d.timeDomainData[timeIdx] || 128) / 128 - 1;
+      const wave = Math.sin(i * 0.08 + t * 2.5 + layer * 0.5) * 15;
+      const amplitude = (fVal * 60 + tVal * 30 + wave) * depth;
+      const y = yBase - amplitude;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = hsla(ch, cs, cl, alpha);
+    ctx.lineWidth = 1.2 + d.energy * 1.5;
+    ctx.shadowBlur = 12 + d.bass * 20;
     ctx.shadowColor = hsl(ch, cs, cl);
     ctx.stroke();
-  }
-
-  // Cross bars
-  for (let i = 0; i < strands; i += 3) {
-    const progress = i / strands;
-    const y = startY + progress * helixH;
-    const fi = Math.floor(progress * d.frequencyData.length * 0.5);
-    const fVal = (d.frequencyData[fi] || 0) / 255 * sens;
-    const angle1 = progress * Math.PI * 4 + t * 2;
-    const angle2 = angle1 + Math.PI;
-    const x1 = cx + Math.cos(angle1) * (radius + fVal * 60);
-    const x2 = cx + Math.cos(angle2) * (radius + fVal * 60);
-
-    const [ch, cs, cl] = getColor(pal, i % 4, t);
-    ctx.beginPath();
-    ctx.moveTo(x1, y);
-    ctx.lineTo(x2, y);
-    ctx.strokeStyle = hsla(ch, cs, cl, 0.3 + fVal * 0.5);
-    ctx.lineWidth = 1 + fVal * 3;
-    ctx.shadowBlur = fVal * 25;
-    ctx.shadowColor = hsl(ch, cs, cl);
-    ctx.stroke();
-
-    const nodeSize = 2 + fVal * 6;
-    ctx.beginPath();
-    ctx.arc(x1, y, nodeSize, 0, Math.PI * 2);
-    ctx.fillStyle = hsla(ch, cs, cl + 10, 0.6 + fVal * 0.4);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(x2, y, nodeSize, 0, Math.PI * 2);
-    ctx.fillStyle = hsla(ch, cs, cl + 10, 0.6 + fVal * 0.4);
-    ctx.fill();
   }
 
   ctx.shadowBlur = 0;
@@ -534,7 +538,7 @@ export const MODES: VisualizationMode[] = [
   { name: 'Particle Galaxy', icon: '✨', render: renderParticles },
   { name: 'Liquid Blob', icon: '💧', render: renderBlob },
   { name: 'Tunnel', icon: '🌀', render: renderTunnel },
-  { name: 'DNA Helix', icon: '🧬', render: renderDNA },
+  { name: 'Waveform 3D', icon: '🌊', render: renderWaveform3D },
   { name: 'Neon Sphere', icon: '🔵', render: renderSphere },
   { name: 'Shockwave', icon: '💥', render: renderShockwave },
 ];
