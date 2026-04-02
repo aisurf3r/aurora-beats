@@ -35,7 +35,7 @@
 | 3 | ✨ **Particle Galaxy** | Hundreds of reactive particles forming constellations |
 | 4 | 💧 **Liquid Blob** | Organic fluid shapes that deform and flow with the audio |
 | 5 | 🌀 **Tunnel** | Infinite 3D tunnel with hexagonal rings advancing to the beat |
-| 6 | 🧬 **DNA Helix** | Double helix structure with reactive cross-bars and glowing nodes |
+| 6 | 🌊 **Waveform 3D** | Layered 3D waveforms with depth perspective reacting to frequency and time data |
 | 7 | 🔵 **Neon Sphere** | Wireframe geometries with neon colors reacting to frequency bands |
 | 8 | 💥 **Shockwave** | Expanding shockwave rings triggered by beat peaks |
 
