@@ -1,8 +1,8 @@
 import type { AudioData } from '@/hooks/useAudioAnalyzer';
 
 // ─── Color System ───
-export type PaletteName = 'cyber' | 'aurora' | 'fire' | 'ocean' | 'rainbow' | 'synthwave' | 'toxic' | 'sunset' | 'ice' | 'galaxy';
-export const PALETTE_NAMES: PaletteName[] = ['cyber', 'aurora', 'fire', 'ocean', 'rainbow', 'synthwave', 'toxic', 'sunset', 'ice', 'galaxy'];
+export type PaletteName = 'cyber' | 'aurora' | 'fire' | 'ocean' | 'rainbow' | 'synth' | 'toxic' | 'sunset' | 'ice' | 'galaxy';
+export const PALETTE_NAMES: PaletteName[] = ['cyber', 'aurora', 'fire', 'ocean', 'rainbow', 'synth', 'toxic', 'sunset', 'ice', 'galaxy'];
 
 // HSL triplets [h, s, l]
 type HSL = [number, number, number];
@@ -12,7 +12,7 @@ const PALS: Record<PaletteName, HSL[]> = {
   fire:       [[15,100,55],[35,100,55],[50,100,55],[0,100,50]],
   ocean:      [[195,100,45],[200,100,40],[190,80,70],[185,80,55]],
   rainbow:    [], // handled dynamically
-  synthwave:  [[280,100,60],[320,100,55],[200,100,65],[260,90,50]],
+  synth:      [[280,100,60],[320,100,55],[200,100,65],[260,90,50]],
   toxic:      [[120,100,45],[90,100,50],[150,80,55],[60,100,60]],
   sunset:     [[35,95,60],[310,80,55],[45,100,70],[280,60,65]],
   ice:        [[175,70,70],[260,60,75],[140,50,65],[300,40,72]],
