@@ -935,9 +935,7 @@ export const MODES: VisualizationMode[] = [
   { name: 'Tunnel', icon: '🌀', render: renderTunnel },
   { name: 'Aurora Borealis', icon: '🌌', render: renderAurora },
   { name: 'Mandala', icon: '💎', render: renderMandala },
-  { name: 'Fire Storm', icon: '🔥', render: renderFireStorm },
   { name: 'Spiral Vortex', icon: '🌀', render: renderSpiralVortex },
   { name: 'Neon Sphere', icon: '🔵', render: renderSphere },
   { name: 'Shockwave', icon: '💥', render: renderShockwave },
-  { name: 'Lightning Web', icon: '⚡', render: renderLightning },
 ];
