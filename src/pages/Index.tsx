@@ -64,7 +64,7 @@ const Index = () => {
         </button>
 
         <div className="mt-16 flex items-center gap-6 text-[10px] font-display tracking-[0.2em] text-muted-foreground/40 uppercase">
-          <span>8 Visual Modes</span>
+          <span>10 Visual Modes</span>
           <span className="w-1 h-1 rounded-full bg-primary/30" />
           <span>Beat Detection</span>
           <span className="w-1 h-1 rounded-full bg-primary/30" />
