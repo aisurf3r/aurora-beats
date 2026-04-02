@@ -175,7 +175,7 @@ export function ControlPanel({
           {/* GitHub link */}
           <div className="flex justify-end pt-1">
             <a
-              href="https://github.com/aisurf3r/Music-Visualizer"
+              href="https://github.com/aisurf3r/aurora-beats"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-primary transition-colors"
