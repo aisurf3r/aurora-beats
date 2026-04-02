@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">🌌 Aurora Visualizer</h1>
+  <h1 align="center">🌌 Aurora Beats Music Visualizer</h1>
   <p align="center">
     <strong>An ultra-immersive, real-time music visualizer running 100% in the browser</strong>
   </p>
