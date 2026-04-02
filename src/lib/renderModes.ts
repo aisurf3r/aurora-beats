@@ -325,201 +325,420 @@ function renderTunnel(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h:
   ctx.shadowBlur = 0;
 }
 
-// ─── MODE 6: Waveform 3D ───
-function renderWaveform3D(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h: number, t: number, pal: PaletteName, sens: number) {
-  ctx.fillStyle = 'rgba(0,0,0,0.1)';
+// ─── MODE 6: Aurora Borealis ───
+function renderAurora(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h: number, t: number, pal: PaletteName, sens: number) {
+  ctx.fillStyle = 'rgba(0,0,0,0.06)';
   ctx.fillRect(0, 0, w, h);
 
-  const layers = 30;
-  const points = 128;
-  const layerSpacing = h / (layers + 4);
-  const startY = h * 0.12;
+  const curtains = 5;
+  for (let c = 0; c < curtains; c++) {
+    const baseY = h * (0.2 + c * 0.12);
+    const [ch, cs, cl] = getColor(pal, c, t);
+    const points = 120;
 
-  for (let layer = layers - 1; layer >= 0; layer--) {
-    const layerProgress = layer / layers;
-    const yBase = startY + layer * layerSpacing;
-    const depth = 1 - layerProgress * 0.6;
-    const xMargin = w * 0.05 + layerProgress * w * 0.08;
-    const usableW = w - xMargin * 2;
-
-    const [ch, cs, cl] = getColor(pal, layer, t);
-    const alpha = 0.3 + (1 - layerProgress) * 0.7;
-
+    // Top edge of curtain
     ctx.beginPath();
-    for (let i = 0; i < points; i++) {
-      const x = xMargin + (i / (points - 1)) * usableW;
-      const freqIdx = Math.floor((i / points) * d.frequencyData.length * 0.6);
-      const timeIdx = Math.floor((i / points) * d.timeDomainData.length);
-      const fVal = (d.frequencyData[freqIdx] || 0) / 255 * sens;
-      const tVal = (d.timeDomainData[timeIdx] || 128) / 128 - 1;
-
-      const wave = Math.sin(i * 0.08 + t * 2.5 + layer * 0.5) * 15;
-      const amplitude = (fVal * 60 + tVal * 30 + wave) * depth;
-      const y = yBase - amplitude;
-
+    for (let i = 0; i <= points; i++) {
+      const x = (i / points) * w;
+      const fi = Math.floor((i / points) * d.frequencyData.length * 0.5);
+      const fVal = (d.frequencyData[fi] || 0) / 255 * sens;
+      const wave1 = Math.sin(i * 0.04 + t * 1.2 + c * 1.5) * 40;
+      const wave2 = Math.sin(i * 0.02 + t * 0.7 + c * 2.3) * 25;
+      const wave3 = Math.sin(i * 0.08 + t * 2.1 + c * 0.8) * 15;
+      const y = baseY + wave1 + wave2 + wave3 - fVal * 80;
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
-
-    // Close the shape for fill
-    ctx.lineTo(xMargin + usableW, yBase + layerSpacing);
-    ctx.lineTo(xMargin, yBase + layerSpacing);
+    // Bottom edge (fade down)
+    for (let i = points; i >= 0; i--) {
+      const x = (i / points) * w;
+      const fi = Math.floor((i / points) * d.frequencyData.length * 0.5);
+      const fVal = (d.frequencyData[fi] || 0) / 255 * sens;
+      const wave1 = Math.sin(i * 0.04 + t * 1.2 + c * 1.5) * 40;
+      const y = baseY + wave1 + 100 + fVal * 40;
+      ctx.lineTo(x, y);
+    }
     ctx.closePath();
 
-    const grad = ctx.createLinearGradient(0, yBase - 80, 0, yBase + layerSpacing);
-    grad.addColorStop(0, hsla(ch, cs, cl, alpha * 0.4));
-    grad.addColorStop(1, hsla(ch, cs, cl, 0));
+    const grad = ctx.createLinearGradient(0, baseY - 100, 0, baseY + 150);
+    grad.addColorStop(0, hsla(ch, cs, cl + 15, 0));
+    grad.addColorStop(0.3, hsla(ch, cs, cl + 10, 0.15 + d.energy * 0.2));
+    grad.addColorStop(0.6, hsla(ch, cs, cl, 0.1 + d.bass * 0.15));
+    grad.addColorStop(1, hsla(ch, cs, cl - 10, 0));
     ctx.fillStyle = grad;
-    ctx.fill();
-
-    // Stroke the top waveform line
-    ctx.beginPath();
-    for (let i = 0; i < points; i++) {
-      const x = xMargin + (i / (points - 1)) * usableW;
-      const freqIdx = Math.floor((i / points) * d.frequencyData.length * 0.6);
-      const timeIdx = Math.floor((i / points) * d.timeDomainData.length);
-      const fVal = (d.frequencyData[freqIdx] || 0) / 255 * sens;
-      const tVal = (d.timeDomainData[timeIdx] || 128) / 128 - 1;
-      const wave = Math.sin(i * 0.08 + t * 2.5 + layer * 0.5) * 15;
-      const amplitude = (fVal * 60 + tVal * 30 + wave) * depth;
-      const y = yBase - amplitude;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.strokeStyle = hsla(ch, cs, cl, alpha);
-    ctx.lineWidth = 1.2 + d.energy * 1.5;
-    ctx.shadowBlur = 12 + d.bass * 20;
+    ctx.shadowBlur = 30 + d.bass * 40;
     ctx.shadowColor = hsl(ch, cs, cl);
-    ctx.stroke();
+    ctx.fill();
   }
 
+  // Shimmer particles on beats
+  if (d.isBeat || d.highs > 0.5) {
+    for (let i = 0; i < 15; i++) {
+      const x = Math.random() * w;
+      const y = h * 0.15 + Math.random() * h * 0.5;
+      const size = 1 + Math.random() * 2;
+      const [sh, ss, sl] = getColor(pal, Math.floor(Math.random() * 4), t);
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fillStyle = hsla(sh, ss, sl + 20, 0.6 + Math.random() * 0.4);
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = hsl(sh, ss, sl);
+      ctx.fill();
+    }
+  }
   ctx.shadowBlur = 0;
 }
 
-// ─── MODE 7: Neon Wireframe Sphere ───
-function renderSphere(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h: number, t: number, pal: PaletteName, sens: number) {
-  ctx.fillStyle = 'rgba(0,0,0,0.1)';
+// ─── MODE 7: Geometric Mandala ───
+function renderMandala(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h: number, t: number, pal: PaletteName, sens: number) {
+  ctx.fillStyle = 'rgba(0,0,0,0.08)';
   ctx.fillRect(0, 0, w, h);
 
   const cx = w / 2, cy = h / 2;
-  const baseR = Math.min(w, h) * 0.25;
+  const layers = 6;
+  const maxR = Math.min(w, h) * 0.42;
 
-  // Draw two wireframe circles with displacement
-  for (let ring = 0; ring < 2; ring++) {
-    const vertices = 72;
-    const points: [number, number][] = [];
-    const rotOffset = ring * 0.4 + t * (ring === 0 ? 0.3 : -0.2);
+  ctx.save();
+  ctx.translate(cx, cy);
 
-    for (let i = 0; i < vertices; i++) {
-      const a = (i / vertices) * Math.PI * 2;
-      const fi = ((ring * 32 + i * 2) % d.frequencyData.length);
-      const fVal = (d.frequencyData[fi] || 0) / 255 * sens;
-      const disp = fVal * baseR * 0.45;
-      const wobble = Math.sin(a * 4 + t * 3) * 8 + Math.sin(a * 7 + t * 1.5) * 5;
-      const r = baseR * (0.7 + ring * 0.35) + disp + wobble;
-      points.push([cx + Math.cos(a + rotOffset) * r, cy + Math.sin(a + rotOffset) * r]);
-    }
+  for (let layer = 0; layer < layers; layer++) {
+    const petals = 8 + layer * 4;
+    const layerR = maxR * (0.2 + layer * 0.15);
+    const rotSpeed = (layer % 2 === 0 ? 1 : -1) * (0.1 + layer * 0.05);
+    const fi = layer * 20;
+    const fVal = (d.frequencyData[fi] || 0) / 255 * sens;
 
-    // Main outline
-    ctx.beginPath();
-    points.forEach(([x, y], i) => {
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-    ctx.closePath();
-    const [ch, cs, cl] = getColor(pal, ring, t);
-    ctx.strokeStyle = hsl(ch, cs, cl);
-    ctx.lineWidth = 1.5 + d.energy * 2;
-    ctx.shadowBlur = 25;
-    ctx.shadowColor = hsl(ch, cs, cl);
-    ctx.stroke();
+    ctx.save();
+    ctx.rotate(t * rotSpeed);
 
-    // Cross-connections
-    for (let i = 0; i < vertices; i += 6) {
-      const j = (i + Math.floor(vertices / 3)) % vertices;
+    const [ch, cs, cl] = getColor(pal, layer, t);
+
+    for (let p = 0; p < petals; p++) {
+      const angle = (p / petals) * Math.PI * 2;
+      const petalLen = layerR * (0.6 + fVal * 0.8);
+      const petalW = (Math.PI / petals) * (0.4 + fVal * 0.5);
+
       ctx.beginPath();
-      ctx.moveTo(points[i][0], points[i][1]);
-      ctx.lineTo(points[j][0], points[j][1]);
-      ctx.strokeStyle = hsla(ch, cs, cl, 0.15 + d.highs * 0.3);
-      ctx.lineWidth = 0.8;
-      ctx.shadowBlur = 10;
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(
+        Math.cos(angle - petalW) * petalLen * 0.7,
+        Math.sin(angle - petalW) * petalLen * 0.7,
+        Math.cos(angle) * petalLen,
+        Math.sin(angle) * petalLen
+      );
+      ctx.quadraticCurveTo(
+        Math.cos(angle + petalW) * petalLen * 0.7,
+        Math.sin(angle + petalW) * petalLen * 0.7,
+        0, 0
+      );
+
+      ctx.fillStyle = hsla(ch, cs, cl, 0.08 + fVal * 0.15);
+      ctx.strokeStyle = hsla(ch, cs, cl, 0.4 + fVal * 0.5);
+      ctx.lineWidth = 1 + fVal * 2;
+      ctx.shadowBlur = 15 + fVal * 25;
+      ctx.shadowColor = hsl(ch, cs, cl);
+      ctx.fill();
       ctx.stroke();
     }
+
+    // Dots at petal tips
+    for (let p = 0; p < petals; p++) {
+      const angle = (p / petals) * Math.PI * 2;
+      const dist = layerR * (0.6 + fVal * 0.8);
+      const dotSize = 2 + fVal * 5;
+      ctx.beginPath();
+      ctx.arc(Math.cos(angle) * dist, Math.sin(angle) * dist, dotSize, 0, Math.PI * 2);
+      ctx.fillStyle = hsla(ch, cs, cl + 15, 0.5 + fVal * 0.5);
+      ctx.fill();
+    }
+
+    ctx.restore();
   }
 
   // Center glow
-  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseR * 0.4);
-  grad.addColorStop(0, colA(pal, 2, t, 0.15 + d.bass * 0.2));
-  grad.addColorStop(1, 'transparent');
-  ctx.fillStyle = grad;
+  const cGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, maxR * 0.15);
+  cGrad.addColorStop(0, colA(pal, 0, t, 0.3 + d.bass * 0.4));
+  cGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = cGrad;
   ctx.beginPath();
-  ctx.arc(cx, cy, baseR * 0.4, 0, Math.PI * 2);
+  ctx.arc(0, 0, maxR * 0.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+  ctx.shadowBlur = 0;
+}
+
+// ─── MODE 8: Fire Storm ───
+interface Ember { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; size: number; ci: number; }
+let embers: Ember[] = [];
+let embersInit = false;
+
+function renderFireStorm(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h: number, t: number, pal: PaletteName, sens: number) {
+  ctx.fillStyle = 'rgba(0,0,0,0.08)';
+  ctx.fillRect(0, 0, w, h);
+
+  if (!embersInit) { embers = []; embersInit = true; }
+
+  const cx = w / 2, cy = h * 0.7;
+  const spawnRate = Math.floor(5 + d.bass * 30 * sens);
+
+  // Spawn new embers
+  for (let i = 0; i < spawnRate; i++) {
+    const spread = w * 0.4;
+    embers.push({
+      x: cx + (Math.random() - 0.5) * spread,
+      y: cy + Math.random() * 40,
+      vx: (Math.random() - 0.5) * 3,
+      vy: -(2 + Math.random() * 4 + d.bass * 6 * sens),
+      life: 0,
+      maxLife: 40 + Math.random() * 60,
+      size: 2 + Math.random() * 6 + d.energy * 4,
+      ci: Math.floor(Math.random() * 4),
+    });
+  }
+
+  // Update and draw embers
+  embers = embers.filter(e => e.life < e.maxLife);
+  if (embers.length > 600) embers.splice(0, embers.length - 600);
+
+  for (const e of embers) {
+    e.life++;
+    const lifeRatio = e.life / e.maxLife;
+    e.x += e.vx + Math.sin(t * 3 + e.y * 0.01) * 1.5;
+    e.vy *= 0.98;
+    e.y += e.vy;
+    e.size *= 0.99;
+
+    const alpha = Math.max(0, 1 - lifeRatio);
+    const [ch, cs, cl] = getColor(pal, e.ci, t);
+    const adjustedL = cl + (1 - lifeRatio) * 20;
+
+    // Glow
+    const grad = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, e.size * 3);
+    grad.addColorStop(0, hsla(ch, cs, adjustedL, alpha * 0.6));
+    grad.addColorStop(0.5, hsla(ch, cs, cl, alpha * 0.2));
+    grad.addColorStop(1, hsla(ch, cs, cl - 20, 0));
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, e.size * 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Core
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, e.size * 0.5, 0, Math.PI * 2);
+    ctx.fillStyle = hsla(ch, cs, adjustedL + 20, alpha);
+    ctx.fill();
+  }
+
+  // Base fire glow
+  const baseGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, w * 0.35);
+  baseGrad.addColorStop(0, colA(pal, 0, t, 0.12 + d.bass * 0.2));
+  baseGrad.addColorStop(0.5, colA(pal, 1, t, 0.05));
+  baseGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = baseGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, w * 0.35, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.shadowBlur = 0;
 }
 
-// ─── MODE 8: Shockwave + Waveform ───
-function renderShockwave(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h: number, t: number, pal: PaletteName, sens: number) {
-  ctx.fillStyle = 'rgba(0,0,0,0.1)';
+// ─── MODE 9: Spiral Vortex ───
+function renderSpiralVortex(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h: number, t: number, pal: PaletteName, sens: number) {
+  ctx.fillStyle = 'rgba(0,0,0,0.06)';
+  ctx.fillRect(0, 0, w, h);
+
+  const cx = w / 2, cy = h / 2;
+  const arms = 5;
+  const pointsPerArm = 200;
+  const maxR = Math.min(w, h) * 0.45;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  for (let arm = 0; arm < arms; arm++) {
+    const armOffset = (arm / arms) * Math.PI * 2;
+    const [ch, cs, cl] = getColor(pal, arm, t);
+
+    ctx.beginPath();
+    let prevX = 0, prevY = 0;
+    for (let i = 0; i < pointsPerArm; i++) {
+      const progress = i / pointsPerArm;
+      const angle = progress * Math.PI * 6 + armOffset + t * 0.8;
+      const fi = Math.floor(progress * d.frequencyData.length * 0.5);
+      const fVal = (d.frequencyData[fi] || 0) / 255 * sens;
+      const radius = progress * maxR * (0.8 + fVal * 0.5);
+      const wobble = Math.sin(progress * 20 + t * 3) * (5 + fVal * 15);
+      const x = Math.cos(angle) * (radius + wobble);
+      const y = Math.sin(angle) * (radius + wobble);
+
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+      prevX = x;
+      prevY = y;
+    }
+
+    ctx.strokeStyle = hsla(ch, cs, cl, 0.5 + d.energy * 0.4);
+    ctx.lineWidth = 1.5 + d.bass * 3;
+    ctx.shadowBlur = 15 + d.bass * 30;
+    ctx.shadowColor = hsl(ch, cs, cl);
+    ctx.stroke();
+
+    // Dots along the spiral
+    for (let i = 0; i < pointsPerArm; i += 8) {
+      const progress = i / pointsPerArm;
+      const angle = progress * Math.PI * 6 + armOffset + t * 0.8;
+      const fi = Math.floor(progress * d.frequencyData.length * 0.5);
+      const fVal = (d.frequencyData[fi] || 0) / 255 * sens;
+      const radius = progress * maxR * (0.8 + fVal * 0.5);
+      const wobble = Math.sin(progress * 20 + t * 3) * (5 + fVal * 15);
+      const x = Math.cos(angle) * (radius + wobble);
+      const y = Math.sin(angle) * (radius + wobble);
+      const dotSize = 1 + fVal * 4;
+
+      ctx.beginPath();
+      ctx.arc(x, y, dotSize, 0, Math.PI * 2);
+      ctx.fillStyle = hsla(ch, cs, cl + 15, 0.3 + fVal * 0.7);
+      ctx.fill();
+    }
+  }
+
+  // Center vortex
+  const vGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 50 + d.bass * 40);
+  vGrad.addColorStop(0, colA(pal, 0, t, 0.4 + d.bass * 0.3));
+  vGrad.addColorStop(0.5, colA(pal, 2, t, 0.1));
+  vGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = vGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, 50 + d.bass * 40, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+  ctx.shadowBlur = 0;
+}
+
+// ─── MODE 10: Lightning Web ───
+interface LightningBolt { points: [number, number][]; opacity: number; ci: number; width: number; }
+let bolts: LightningBolt[] = [];
+
+function generateBolt(x1: number, y1: number, x2: number, y2: number, depth: number): [number, number][] {
+  if (depth === 0) return [[x1, y1], [x2, y2]];
+  const midX = (x1 + x2) / 2 + (Math.random() - 0.5) * Math.abs(x2 - x1) * 0.4;
+  const midY = (y1 + y2) / 2 + (Math.random() - 0.5) * Math.abs(y2 - y1) * 0.4;
+  const left = generateBolt(x1, y1, midX, midY, depth - 1);
+  const right = generateBolt(midX, midY, x2, y2, depth - 1);
+  return [...left, ...right.slice(1)];
+}
+
+function renderLightning(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h: number, t: number, pal: PaletteName, sens: number) {
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
   ctx.fillRect(0, 0, w, h);
 
   const cx = w / 2, cy = h / 2;
 
-  // Waveform
-  ctx.beginPath();
-  const sliceW = w / d.timeDomainData.length * 2;
-  for (let i = 0; i < d.timeDomainData.length / 2; i++) {
-    const v = d.timeDomainData[i] / 128.0;
-    const y = cy + (v - 1) * h * 0.25 * sens;
-    if (i === 0) ctx.moveTo(0, y);
-    else ctx.lineTo(i * sliceW, y);
-  }
-  const [wh, ws, wl] = getColor(pal, 0, t);
-  ctx.strokeStyle = hsla(wh, ws, wl, 0.5);
-  ctx.lineWidth = 2;
-  ctx.shadowBlur = 15;
-  ctx.shadowColor = hsl(wh, ws, wl);
-  ctx.stroke();
-
-  // Add shockwave on beat
-  if (d.isBeat) {
-    shockwaves.push({ radius: 5, opacity: 1, ci: Math.floor(t * 10) % 4 });
+  // Spawn bolts on beat or high energy
+  if (d.isBeat || (d.energy > 0.6 && Math.random() < 0.3)) {
+    const count = 1 + Math.floor(d.bass * 4);
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 150 + Math.random() * Math.min(w, h) * 0.3;
+      const endX = cx + Math.cos(angle) * dist;
+      const endY = cy + Math.sin(angle) * dist;
+      bolts.push({
+        points: generateBolt(cx, cy, endX, endY, 5),
+        opacity: 1,
+        ci: Math.floor(Math.random() * 4),
+        width: 1.5 + d.bass * 3,
+      });
+    }
   }
 
-  // Update and draw shockwaves
-  shockwaves = shockwaves.filter(s => s.opacity > 0.01);
-  for (const s of shockwaves) {
-    const [sh, ss, sl] = getColor(pal, s.ci, t);
+  // Draw and fade bolts
+  bolts = bolts.filter(b => b.opacity > 0.02);
+  if (bolts.length > 30) bolts.splice(0, bolts.length - 30);
+
+  for (const bolt of bolts) {
+    const [ch, cs, cl] = getColor(pal, bolt.ci, t);
+
+    // Outer glow
     ctx.beginPath();
-    ctx.arc(cx, cy, s.radius, 0, Math.PI * 2);
-    ctx.strokeStyle = hsla(sh, ss, sl, s.opacity);
-    ctx.lineWidth = 2 + s.opacity * 6;
-    ctx.shadowBlur = s.opacity * 35;
-    ctx.shadowColor = hsl(sh, ss, sl);
+    bolt.points.forEach(([x, y], i) => {
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = hsla(ch, cs, cl, bolt.opacity * 0.3);
+    ctx.lineWidth = bolt.width * 4;
+    ctx.shadowBlur = 40;
+    ctx.shadowColor = hsl(ch, cs, cl);
     ctx.stroke();
 
-    // Double ring
-    if (s.radius > 30) {
-      ctx.beginPath();
-      ctx.arc(cx, cy, s.radius * 0.7, 0, Math.PI * 2);
-      ctx.strokeStyle = hsla(sh, ss, sl, s.opacity * 0.4);
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    }
+    // Core
+    ctx.beginPath();
+    bolt.points.forEach(([x, y], i) => {
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = hsla(ch, cs, cl + 25, bolt.opacity);
+    ctx.lineWidth = bolt.width;
+    ctx.stroke();
 
-    s.radius += 7 + d.energy * 12 * sens;
-    s.opacity -= 0.018;
+    bolt.opacity -= 0.03;
   }
 
-  // Center energy indicator
-  const eR = 20 + d.energy * 60 * sens;
-  const eGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, eR);
-  eGrad.addColorStop(0, colA(pal, 1, t, 0.3 + d.bass * 0.4));
-  eGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = eGrad;
+  // Ambient web connections from center
+  const nodes = 12;
+  for (let i = 0; i < nodes; i++) {
+    const angle = (i / nodes) * Math.PI * 2 + t * 0.2;
+    const fi = (i * 10) % d.frequencyData.length;
+    const fVal = (d.frequencyData[fi] || 0) / 255 * sens;
+    const dist = 80 + fVal * Math.min(w, h) * 0.25;
+    const x = cx + Math.cos(angle) * dist;
+    const y = cy + Math.sin(angle) * dist;
+
+    const [ch, cs, cl] = getColor(pal, i, t);
+
+    // Node
+    ctx.beginPath();
+    ctx.arc(x, y, 3 + fVal * 6, 0, Math.PI * 2);
+    ctx.fillStyle = hsla(ch, cs, cl, 0.4 + fVal * 0.6);
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = hsl(ch, cs, cl);
+    ctx.fill();
+
+    // Line to center
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = hsla(ch, cs, cl, 0.1 + fVal * 0.2);
+    ctx.lineWidth = 0.5 + fVal * 1.5;
+    ctx.stroke();
+
+    // Connect to neighbors
+    const j = (i + 1) % nodes;
+    const jAngle = (j / nodes) * Math.PI * 2 + t * 0.2;
+    const jfi = (j * 10) % d.frequencyData.length;
+    const jfVal = (d.frequencyData[jfi] || 0) / 255 * sens;
+    const jDist = 80 + jfVal * Math.min(w, h) * 0.25;
+    const jx = cx + Math.cos(jAngle) * jDist;
+    const jy = cy + Math.sin(jAngle) * jDist;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(jx, jy);
+    ctx.strokeStyle = hsla(ch, cs, cl, 0.08 + fVal * 0.15);
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+
+  // Center glow
+  const cGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 40 + d.energy * 30);
+  cGrad.addColorStop(0, colA(pal, 0, t, 0.2 + d.bass * 0.3));
+  cGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = cGrad;
   ctx.beginPath();
-  ctx.arc(cx, cy, eR, 0, Math.PI * 2);
+  ctx.arc(cx, cy, 40 + d.energy * 30, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.shadowBlur = 0;
@@ -538,7 +757,11 @@ export const MODES: VisualizationMode[] = [
   { name: 'Particle Galaxy', icon: '✨', render: renderParticles },
   { name: 'Liquid Blob', icon: '💧', render: renderBlob },
   { name: 'Tunnel', icon: '🌀', render: renderTunnel },
-  { name: 'Waveform 3D', icon: '🌊', render: renderWaveform3D },
+  { name: 'Aurora Borealis', icon: '🌌', render: renderAurora },
+  { name: 'Mandala', icon: '💎', render: renderMandala },
+  { name: 'Fire Storm', icon: '🔥', render: renderFireStorm },
+  { name: 'Spiral Vortex', icon: '🌀', render: renderSpiralVortex },
   { name: 'Neon Sphere', icon: '🔵', render: renderSphere },
   { name: 'Shockwave', icon: '💥', render: renderShockwave },
+  { name: 'Lightning Web', icon: '⚡', render: renderLightning },
 ];
