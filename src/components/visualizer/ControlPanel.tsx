@@ -124,7 +124,7 @@ export function ControlPanel({
                 <button
                   key={p}
                   onClick={() => setPalette(p)}
-                  className={`p-1.5 rounded-lg text-[7px] font-display tracking-wider capitalize transition-all truncate text-center ${
+                  className={`p-1.5 rounded-lg text-[8px] font-display tracking-wider capitalize transition-all truncate text-center ${
                     palette === p
                       ? 'bg-primary/20 text-primary border border-primary/30'
                       : 'bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent'
