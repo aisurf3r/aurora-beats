@@ -35,9 +35,13 @@
 | 3 | ✨ **Particle Galaxy** | Hundreds of reactive particles forming constellations |
 | 4 | 💧 **Liquid Blob** | Organic fluid shapes that deform and flow with the audio |
 | 5 | 🌀 **Tunnel** | Infinite 3D tunnel with hexagonal rings advancing to the beat |
-| 6 | 🌊 **Waveform 3D** | Layered 3D waveforms with depth perspective reacting to frequency and time data |
-| 7 | 🔵 **Neon Sphere** | Wireframe geometries with neon colors reacting to frequency bands |
-| 8 | 💥 **Shockwave** | Expanding shockwave rings triggered by beat peaks |
+| 6 | 🌌 **Aurora Borealis** | Flowing curtains of light with shimmer particles on beats |
+| 7 | 💎 **Geometric Mandala** | Multi-layered sacred geometry rotating at different speeds |
+| 8 | 🔥 **Fire Storm** | Explosive ember particles rising with bass energy |
+| 9 | 🌀 **Spiral Vortex** | Hypnotic spiral arms with frequency-reactive wobble |
+| 10 | 🔵 **Neon Sphere** | Wireframe geometries with neon colors reacting to frequency bands |
+| 11 | 💥 **Shockwave** | Expanding shockwave rings triggered by beat peaks |
+| 12 | ⚡ **Lightning Web** | Branching electric bolts radiating from center on beats |
 
 ## 🚀 Getting Started <a name="getting-started"></a>
 
