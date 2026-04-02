@@ -37,11 +37,9 @@
 | 5 | 🌀 **Tunnel** | Infinite 3D tunnel with hexagonal rings advancing to the beat |
 | 6 | 🌌 **Aurora Borealis** | Flowing curtains of light with shimmer particles on beats |
 | 7 | 💎 **Geometric Mandala** | Multi-layered sacred geometry rotating at different speeds |
-| 8 | 🔥 **Fire Storm** | Explosive ember particles rising with bass energy |
-| 9 | 🌀 **Spiral Vortex** | Hypnotic spiral arms with frequency-reactive wobble |
-| 10 | 🔵 **Neon Sphere** | Wireframe geometries with neon colors reacting to frequency bands |
-| 11 | 💥 **Shockwave** | Expanding shockwave rings triggered by beat peaks |
-| 12 | ⚡ **Lightning Web** | Branching electric bolts radiating from center on beats |
+| 8 | 🌀 **Spiral Vortex** | Hypnotic spiral arms with frequency-reactive wobble |
+| 9 | 🔵 **Neon Sphere** | Wireframe geometries with neon colors reacting to frequency bands |
+| 10| 💥 **Shockwave** | Expanding shockwave rings triggered by beat peaks |
 
 ## 🚀 Getting Started <a name="getting-started"></a>
 
