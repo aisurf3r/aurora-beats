@@ -391,22 +391,28 @@ function renderAurora(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h:
 
 // ─── MODE 7: Geometric Mandala ───
 function renderMandala(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h: number, t: number, pal: PaletteName, sens: number) {
-  ctx.fillStyle = 'rgba(0,0,0,0.08)';
+  ctx.fillStyle = 'rgba(0,0,0,0.12)';
   ctx.fillRect(0, 0, w, h);
 
   const cx = w / 2, cy = h / 2;
-  const layers = 6;
+  const layers = 7;
   const maxR = Math.min(w, h) * 0.42;
 
   ctx.save();
   ctx.translate(cx, cy);
 
   for (let layer = 0; layer < layers; layer++) {
-    const petals = 8 + layer * 4;
-    const layerR = maxR * (0.2 + layer * 0.15);
-    const rotSpeed = (layer % 2 === 0 ? 1 : -1) * (0.1 + layer * 0.05);
-    const fi = layer * 20;
+    // Petal count morphs over time
+    const basePetals = 5 + layer * 2;
+    const petalMorph = Math.sin(t * 0.4 + layer * 1.1) * 2;
+    const petals = Math.max(3, Math.round(basePetals + petalMorph));
+    const layerR = maxR * (0.15 + layer * 0.13);
+    const rotSpeed = (layer % 2 === 0 ? 1 : -1) * (0.2 + layer * 0.08);
+    const fi = layer * 18;
     const fVal = (d.frequencyData[fi] || 0) / 255 * sens;
+
+    // Shape type cycles: 0=petal, 1=star, 2=polygon
+    const shapePhase = Math.floor(t * 0.15 + layer * 0.7) % 3;
 
     ctx.save();
     ctx.rotate(t * rotSpeed);
@@ -415,53 +421,108 @@ function renderMandala(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h
 
     for (let p = 0; p < petals; p++) {
       const angle = (p / petals) * Math.PI * 2;
-      const petalLen = layerR * (0.6 + fVal * 0.8);
-      const petalW = (Math.PI / petals) * (0.4 + fVal * 0.5);
+      const breathe = 1 + Math.sin(t * 1.5 + layer * 0.9 + p * 0.3) * 0.25;
+      const petalLen = layerR * (0.5 + fVal * 0.9) * breathe;
+      const petalW = (Math.PI / petals) * (0.3 + fVal * 0.6 + Math.sin(t * 0.8 + layer) * 0.15);
 
       ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.quadraticCurveTo(
-        Math.cos(angle - petalW) * petalLen * 0.7,
-        Math.sin(angle - petalW) * petalLen * 0.7,
-        Math.cos(angle) * petalLen,
-        Math.sin(angle) * petalLen
-      );
-      ctx.quadraticCurveTo(
-        Math.cos(angle + petalW) * petalLen * 0.7,
-        Math.sin(angle + petalW) * petalLen * 0.7,
-        0, 0
-      );
 
-      ctx.fillStyle = hsla(ch, cs, cl, 0.08 + fVal * 0.15);
-      ctx.strokeStyle = hsla(ch, cs, cl, 0.4 + fVal * 0.5);
-      ctx.lineWidth = 1 + fVal * 2;
-      ctx.shadowBlur = 15 + fVal * 25;
+      if (shapePhase === 0) {
+        // Curved petals
+        ctx.moveTo(0, 0);
+        const cp1x = Math.cos(angle - petalW) * petalLen * 0.8;
+        const cp1y = Math.sin(angle - petalW) * petalLen * 0.8;
+        const tipX = Math.cos(angle) * petalLen;
+        const tipY = Math.sin(angle) * petalLen;
+        const cp2x = Math.cos(angle + petalW) * petalLen * 0.8;
+        const cp2y = Math.sin(angle + petalW) * petalLen * 0.8;
+        ctx.bezierCurveTo(cp1x, cp1y, cp1x * 1.1, cp1y * 1.1, tipX, tipY);
+        ctx.bezierCurveTo(cp2x * 1.1, cp2y * 1.1, cp2x, cp2y, 0, 0);
+      } else if (shapePhase === 1) {
+        // Star points
+        const innerR = petalLen * 0.35;
+        ctx.moveTo(Math.cos(angle) * petalLen, Math.sin(angle) * petalLen);
+        const midAngle = angle + Math.PI / petals;
+        ctx.lineTo(Math.cos(midAngle) * innerR, Math.sin(midAngle) * innerR);
+        const nextAngle = angle + (2 * Math.PI / petals);
+        ctx.lineTo(Math.cos(nextAngle) * petalLen, Math.sin(nextAngle) * petalLen);
+        ctx.lineTo(0, 0);
+      } else {
+        // Polygon segments
+        const sides = 3 + Math.floor(fVal * 3);
+        for (let s = 0; s <= sides; s++) {
+          const sa = angle + (s / sides) * (Math.PI * 2 / petals);
+          const sr = petalLen * (0.6 + Math.sin(sa * 3 + t * 2) * 0.3);
+          const sx = Math.cos(sa) * sr;
+          const sy = Math.sin(sa) * sr;
+          if (s === 0) ctx.moveTo(sx, sy);
+          else ctx.lineTo(sx, sy);
+        }
+        ctx.lineTo(0, 0);
+      }
+
+      ctx.closePath();
+      ctx.fillStyle = hsla(ch, cs, cl, 0.06 + fVal * 0.18);
+      ctx.strokeStyle = hsla(ch, cs, cl, 0.5 + fVal * 0.5);
+      ctx.lineWidth = 1 + fVal * 2.5;
+      ctx.shadowBlur = 12 + fVal * 25;
       ctx.shadowColor = hsl(ch, cs, cl);
       ctx.fill();
       ctx.stroke();
     }
 
-    // Dots at petal tips
+    // Orbiting dots at petal tips
     for (let p = 0; p < petals; p++) {
       const angle = (p / petals) * Math.PI * 2;
-      const dist = layerR * (0.6 + fVal * 0.8);
-      const dotSize = 2 + fVal * 5;
+      const breathe = 1 + Math.sin(t * 1.5 + layer * 0.9 + p * 0.3) * 0.25;
+      const dist = layerR * (0.5 + fVal * 0.9) * breathe;
+      const orbitOffset = Math.sin(t * 2 + p) * 8;
+      const dotX = Math.cos(angle) * (dist + orbitOffset);
+      const dotY = Math.sin(angle) * (dist + orbitOffset);
+      const dotSize = 2 + fVal * 6 + Math.sin(t * 3 + p * 1.5) * 2;
       ctx.beginPath();
-      ctx.arc(Math.cos(angle) * dist, Math.sin(angle) * dist, dotSize, 0, Math.PI * 2);
-      ctx.fillStyle = hsla(ch, cs, cl + 15, 0.5 + fVal * 0.5);
+      ctx.arc(dotX, dotY, Math.max(1, dotSize), 0, Math.PI * 2);
+      ctx.fillStyle = hsla(ch, cs, cl + 20, 0.5 + fVal * 0.5);
+      ctx.shadowBlur = 10;
       ctx.fill();
     }
 
     ctx.restore();
   }
 
+  // Rotating connector rings
+  for (let r = 0; r < 3; r++) {
+    const ringR = maxR * (0.3 + r * 0.2);
+    const ringFi = r * 30;
+    const ringFVal = (d.frequencyData[ringFi] || 0) / 255 * sens;
+    const [rh, rs, rl] = getColor(pal, r + 2, t);
+    ctx.beginPath();
+    const segs = 60;
+    for (let i = 0; i <= segs; i++) {
+      const a = (i / segs) * Math.PI * 2;
+      const wobble = Math.sin(a * 6 + t * 2.5 + r) * (5 + ringFVal * 15);
+      const rr = ringR + wobble;
+      const x = Math.cos(a + t * (0.15 + r * 0.1)) * rr;
+      const y = Math.sin(a + t * (0.15 + r * 0.1)) * rr;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = hsla(rh, rs, rl, 0.15 + ringFVal * 0.3);
+    ctx.lineWidth = 0.8 + ringFVal * 1.5;
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = hsl(rh, rs, rl);
+    ctx.stroke();
+  }
+
   // Center glow
-  const cGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, maxR * 0.15);
-  cGrad.addColorStop(0, colA(pal, 0, t, 0.3 + d.bass * 0.4));
+  const cGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, maxR * 0.18);
+  cGrad.addColorStop(0, colA(pal, 0, t, 0.4 + d.bass * 0.5));
+  cGrad.addColorStop(0.5, colA(pal, 2, t, 0.1));
   cGrad.addColorStop(1, 'transparent');
   ctx.fillStyle = cGrad;
   ctx.beginPath();
-  ctx.arc(0, 0, maxR * 0.15, 0, Math.PI * 2);
+  ctx.arc(0, 0, maxR * 0.18, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();
@@ -874,9 +935,7 @@ export const MODES: VisualizationMode[] = [
   { name: 'Tunnel', icon: '🌀', render: renderTunnel },
   { name: 'Aurora Borealis', icon: '🌌', render: renderAurora },
   { name: 'Mandala', icon: '💎', render: renderMandala },
-  { name: 'Fire Storm', icon: '🔥', render: renderFireStorm },
   { name: 'Spiral Vortex', icon: '🌀', render: renderSpiralVortex },
   { name: 'Neon Sphere', icon: '🔵', render: renderSphere },
   { name: 'Shockwave', icon: '💥', render: renderShockwave },
-  { name: 'Lightning Web', icon: '⚡', render: renderLightning },
 ];
