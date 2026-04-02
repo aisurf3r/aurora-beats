@@ -744,6 +744,121 @@ function renderLightning(ctx: CanvasRenderingContext2D, d: AudioData, w: number,
   ctx.shadowBlur = 0;
 }
 
+// ─── MODE 11: Neon Wireframe Sphere ───
+function renderSphere(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h: number, t: number, pal: PaletteName, sens: number) {
+  ctx.fillStyle = 'rgba(0,0,0,0.1)';
+  ctx.fillRect(0, 0, w, h);
+
+  const cx = w / 2, cy = h / 2;
+  const baseR = Math.min(w, h) * 0.25;
+
+  for (let ring = 0; ring < 2; ring++) {
+    const vertices = 72;
+    const points: [number, number][] = [];
+    const rotOffset = ring * 0.4 + t * (ring === 0 ? 0.3 : -0.2);
+
+    for (let i = 0; i < vertices; i++) {
+      const a = (i / vertices) * Math.PI * 2;
+      const fi = ((ring * 32 + i * 2) % d.frequencyData.length);
+      const fVal = (d.frequencyData[fi] || 0) / 255 * sens;
+      const disp = fVal * baseR * 0.45;
+      const wobble = Math.sin(a * 4 + t * 3) * 8 + Math.sin(a * 7 + t * 1.5) * 5;
+      const r = baseR * (0.7 + ring * 0.35) + disp + wobble;
+      points.push([cx + Math.cos(a + rotOffset) * r, cy + Math.sin(a + rotOffset) * r]);
+    }
+
+    ctx.beginPath();
+    points.forEach(([x, y], i) => { if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
+    ctx.closePath();
+    const [ch, cs, cl] = getColor(pal, ring, t);
+    ctx.strokeStyle = hsl(ch, cs, cl);
+    ctx.lineWidth = 1.5 + d.energy * 2;
+    ctx.shadowBlur = 25;
+    ctx.shadowColor = hsl(ch, cs, cl);
+    ctx.stroke();
+
+    for (let i = 0; i < vertices; i += 6) {
+      const j = (i + Math.floor(vertices / 3)) % vertices;
+      ctx.beginPath();
+      ctx.moveTo(points[i][0], points[i][1]);
+      ctx.lineTo(points[j][0], points[j][1]);
+      ctx.strokeStyle = hsla(ch, cs, cl, 0.15 + d.highs * 0.3);
+      ctx.lineWidth = 0.8;
+      ctx.shadowBlur = 10;
+      ctx.stroke();
+    }
+  }
+
+  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseR * 0.4);
+  grad.addColorStop(0, colA(pal, 2, t, 0.15 + d.bass * 0.2));
+  grad.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, baseR * 0.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
+// ─── MODE 12: Shockwave ───
+function renderShockwave(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h: number, t: number, pal: PaletteName, sens: number) {
+  ctx.fillStyle = 'rgba(0,0,0,0.1)';
+  ctx.fillRect(0, 0, w, h);
+
+  const cx = w / 2, cy = h / 2;
+
+  ctx.beginPath();
+  const sliceW = w / d.timeDomainData.length * 2;
+  for (let i = 0; i < d.timeDomainData.length / 2; i++) {
+    const v = d.timeDomainData[i] / 128.0;
+    const y = cy + (v - 1) * h * 0.25 * sens;
+    if (i === 0) ctx.moveTo(0, y);
+    else ctx.lineTo(i * sliceW, y);
+  }
+  const [wh, ws, wl] = getColor(pal, 0, t);
+  ctx.strokeStyle = hsla(wh, ws, wl, 0.5);
+  ctx.lineWidth = 2;
+  ctx.shadowBlur = 15;
+  ctx.shadowColor = hsl(wh, ws, wl);
+  ctx.stroke();
+
+  if (d.isBeat) {
+    shockwaves.push({ radius: 5, opacity: 1, ci: Math.floor(t * 10) % 4 });
+  }
+
+  shockwaves = shockwaves.filter(s => s.opacity > 0.01);
+  for (const s of shockwaves) {
+    const [sh, ss, sl] = getColor(pal, s.ci, t);
+    ctx.beginPath();
+    ctx.arc(cx, cy, s.radius, 0, Math.PI * 2);
+    ctx.strokeStyle = hsla(sh, ss, sl, s.opacity);
+    ctx.lineWidth = 2 + s.opacity * 6;
+    ctx.shadowBlur = s.opacity * 35;
+    ctx.shadowColor = hsl(sh, ss, sl);
+    ctx.stroke();
+
+    if (s.radius > 30) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, s.radius * 0.7, 0, Math.PI * 2);
+      ctx.strokeStyle = hsla(sh, ss, sl, s.opacity * 0.4);
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    s.radius += 7 + d.energy * 12 * sens;
+    s.opacity -= 0.018;
+  }
+
+  const eR = 20 + d.energy * 60 * sens;
+  const eGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, eR);
+  eGrad.addColorStop(0, colA(pal, 1, t, 0.3 + d.bass * 0.4));
+  eGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = eGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, eR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
 // ─── Mode Registry ───
 export interface VisualizationMode {
   name: string;
