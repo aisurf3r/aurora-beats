@@ -36,7 +36,7 @@
 | 4 | 💧 **Liquid Blob** | Organic fluid shapes that deform and flow with the audio |
 | 5 | 🌀 **Tunnel** | Infinite 3D tunnel with hexagonal rings advancing to the beat |
 | 6 | 🌌 **Aurora Borealis** | Flowing curtains of light with shimmer particles on beats |
-| 7 | 💎 **Geometric Mandala** | Multi-layered sacred geometry rotating at different speeds |
+| 7 | 🎛️ **Equalizer** | 64-band equalizer bars with rounded caps, mirror reflections, and floating peak dots |
 | 8 | 🌀 **Spiral Vortex** | Hypnotic spiral arms with frequency-reactive wobble |
 | 9 | 🔵 **Neon Sphere** | Wireframe geometries with neon colors reacting to frequency bands |
 | 10| 💥 **Shockwave** | Expanding shockwave rings triggered by beat peaks |
