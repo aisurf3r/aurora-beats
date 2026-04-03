@@ -185,52 +185,70 @@ function renderParticles(ctx: CanvasRenderingContext2D, d: AudioData, w: number,
     initParticles(w, h);
   }
 
-  ctx.fillStyle = 'rgba(0,0,0,0.12)';
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
   ctx.fillRect(0, 0, w, h);
 
   const cx = w / 2, cy = h / 2;
 
+  // Audio-driven orbit speed — nearly stops when quiet, bursts on beats
+  const audioSpeed = 0.2 + d.energy * 4 * sens;
+  const bassExpand = d.bass * sens * 60;
+  const midPulse = d.mids * sens;
+
   for (const p of particles) {
-    p.angle += p.speed * (1 + d.mids * 3 * sens);
-    p.dist += (d.bass * sens - 0.15) * 2;
+    // Rotation speed is heavily tied to audio energy
+    p.angle += p.speed * audioSpeed;
+
+    // Distance breathes with bass — expands on bass hits, contracts when quiet
+    const targetDist = p.dist * (1 + (d.bass * sens - 0.12) * 0.15);
+    p.dist += (targetDist - p.dist) * 0.1;
     if (p.dist < 20) p.dist = 20 + Math.random() * 50;
     if (p.dist > Math.min(w, h) * 0.5) p.dist = 30 + Math.random() * 50;
 
+    // Beat explosions
     if (d.isBeat) {
-      p.dist += 20 + Math.random() * 40;
-      p.speed *= 1.5;
+      p.dist += 25 + Math.random() * 50;
+      p.speed *= 1.8;
     }
-    p.speed = p.speed * 0.98 + 0.005;
+    // Decay speed back to base, but keep a minimum
+    p.speed = p.speed * 0.95 + 0.004;
 
-    p.x = cx + Math.cos(p.angle) * p.dist;
-    p.y = cy + Math.sin(p.angle) * p.dist;
+    // Wobble orbit path with mids for organic feel
+    const wobble = Math.sin(t * 2 + p.hueOffset * 10) * midPulse * 15;
+    p.x = cx + Math.cos(p.angle) * (p.dist + wobble + bassExpand);
+    p.y = cy + Math.sin(p.angle) * (p.dist + wobble * 0.7 + bassExpand);
 
-    const sizeMultiplier = 1 + d.bass * 3 * sens;
+    // Size reacts to highs
+    const sizeMultiplier = 1 + d.bass * 2.5 * sens + d.highs * 1.5 * sens;
     const size = p.size * sizeMultiplier;
 
     const [ch, cs, cl] = getColor(pal, Math.floor(p.hueOffset), t);
+    // Brightness flickers with energy
+    const brightness = cl + d.highs * 25 + d.energy * 10;
     ctx.beginPath();
     ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
-    ctx.fillStyle = hsla(ch, cs, cl + d.highs * 20, 0.6 + d.energy * 0.4);
-    ctx.shadowBlur = size * 4;
+    ctx.fillStyle = hsla(ch, cs, brightness, 0.5 + d.energy * 0.5);
+    ctx.shadowBlur = size * (3 + d.energy * 6);
     ctx.shadowColor = hsl(ch, cs, cl);
     ctx.fill();
   }
 
-  // Draw connections for nearby particles
+  // Draw connections — more visible on beats
   ctx.shadowBlur = 0;
+  const connAlphaBase = 0.05 + d.energy * 0.3 * sens;
   for (let i = 0; i < particles.length; i += 3) {
     for (let j = i + 3; j < particles.length; j += 5) {
       const dx = particles[i].x - particles[j].x;
       const dy = particles[i].y - particles[j].y;
       const distSq = dx * dx + dy * dy;
-      if (distSq < 4000) {
-        const alpha = (1 - distSq / 4000) * 0.2 * d.mids * sens;
+      const threshold = 3000 + d.bass * sens * 8000;
+      if (distSq < threshold) {
+        const alpha = (1 - distSq / threshold) * connAlphaBase;
         ctx.beginPath();
         ctx.moveTo(particles[i].x, particles[i].y);
         ctx.lineTo(particles[j].x, particles[j].y);
         ctx.strokeStyle = colA(pal, 1, t, alpha);
-        ctx.lineWidth = 0.5;
+        ctx.lineWidth = 0.5 + d.energy * 1;
         ctx.stroke();
       }
     }
@@ -886,7 +904,7 @@ export interface VisualizationMode {
 }
 
 export const MODES: VisualizationMode[] = [
-  { name: 'Frequency Bars', icon: '📊', render: renderBars },
+  { name: 'Frequency Bars', icon: '🎶', render: renderBars },
   { name: 'Kaleidoscope', icon: '🔮', render: renderKaleidoscope },
   { name: 'Particle Galaxy', icon: '✨', render: renderParticles },
   { name: 'Liquid Blob', icon: '💧', render: renderBlob },
