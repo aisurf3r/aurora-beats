@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAudioAnalyzer } from '@/hooks/useAudioAnalyzer';
+import { toast } from '@/components/ui/use-toast';
 import { MODES, type PaletteName } from '@/lib/renderModes';
 import { ControlPanel } from '@/components/visualizer/ControlPanel';
 import { Maximize, Minimize } from 'lucide-react';
@@ -106,11 +107,30 @@ const Visualizer = () => {
     return () => document.removeEventListener('fullscreenchange', handler);
   }, []);
 
+  const isMobileOrTablet = useCallback(() => {
+    const ua = navigator.userAgent || '';
+    const isIPadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+    return /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua) || isIPadOS;
+  }, []);
+
   // File input handler
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) await loadFile(file);
+    e.target.value = '';
   }, [loadFile]);
+
+  const handleLoadTab = useCallback(async () => {
+    if (isMobileOrTablet()) {
+      toast({
+        title: 'Only Desktop',
+        description: 'TAB audio is only available on desktop browsers.',
+      });
+      return;
+    }
+
+    await loadTab();
+  }, [isMobileOrTablet, loadTab]);
 
   return (
     <div className="fixed inset-0 bg-background overflow-hidden cursor-crosshair">
@@ -119,7 +139,7 @@ const Visualizer = () => {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".mp3,.wav,.ogg,.flac,.aac,.m4a,.wma,.opus,.mp4,.webm,.3gp"
+        accept="*/*"
         className="hidden"
         onChange={handleFileSelect}
       />
@@ -158,7 +178,7 @@ const Visualizer = () => {
         sourceName={sourceName}
         onLoadFile={() => fileInputRef.current?.click()}
         onLoadMic={loadMic}
-        onLoadTab={loadTab}
+        onLoadTab={handleLoadTab}
         onStop={stop}
         isActive={isActive}
       />
