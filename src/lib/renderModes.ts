@@ -905,7 +905,7 @@ export interface VisualizationMode {
 }
 
 export const MODES: VisualizationMode[] = [
-  { name: 'Frequency Bars', icon: '📊', render: renderBars },
+  { name: 'Frequency Bars', icon: '🎶', render: renderBars },
   { name: 'Kaleidoscope', icon: '🔮', render: renderKaleidoscope },
   { name: 'Particle Galaxy', icon: '✨', render: renderParticles },
   { name: 'Liquid Blob', icon: '💧', render: renderBlob },
