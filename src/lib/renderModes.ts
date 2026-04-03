@@ -254,7 +254,6 @@ function renderParticles(ctx: CanvasRenderingContext2D, d: AudioData, w: number,
     }
   }
 }
-}
 
 // ─── MODE 4: Liquid Blob ───
 function renderBlob(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h: number, t: number, pal: PaletteName, sens: number) {
