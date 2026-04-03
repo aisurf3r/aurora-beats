@@ -9,7 +9,7 @@ const Visualizer = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { loadFile, loadMic, loadTab, getData, isActive, sourceName, stop } = useAudioAnalyzer();
 
-  const [currentMode, setCurrentMode] = useState(0);
+  const [currentMode, setCurrentMode] = useState(5);
   const [palette, setPalette] = useState<PaletteName>('cyber');
   const [sensitivity, setSensitivity] = useState(1.2);
   const [speed, setSpeed] = useState(1.0);
@@ -119,7 +119,7 @@ const Visualizer = () => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="audio/*,.mp3,.wav,.ogg,.flac,.aac,.m4a,.wma,.opus"
+        accept=".mp3,.wav,.ogg,.flac,.aac,.m4a,.wma,.opus,.mp4,.webm,.3gp"
         className="hidden"
         onChange={handleFileSelect}
       />
