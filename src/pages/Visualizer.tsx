@@ -9,7 +9,7 @@ const Visualizer = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { loadFile, loadMic, loadTab, getData, isActive, sourceName, stop } = useAudioAnalyzer();
 
-  const [currentMode, setCurrentMode] = useState(0);
+  const [currentMode, setCurrentMode] = useState(5);
   const [palette, setPalette] = useState<PaletteName>('cyber');
   const [sensitivity, setSensitivity] = useState(1.2);
   const [speed, setSpeed] = useState(1.0);
