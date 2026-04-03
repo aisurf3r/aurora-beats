@@ -119,7 +119,7 @@ const Visualizer = () => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="audio/*,.mp3,.wav,.ogg,.flac,.aac,.m4a,.wma,.opus"
+        accept=".mp3,.wav,.ogg,.flac,.aac,.m4a,.wma,.opus,.mp4,.webm,.3gp"
         className="hidden"
         onChange={handleFileSelect}
       />
