@@ -389,21 +389,6 @@ function renderAurora(ctx: CanvasRenderingContext2D, d: AudioData, w: number, h:
     ctx.fill();
   }
 
-  // Shimmer particles on beats
-  if (d.isBeat || d.highs > 0.5) {
-    for (let i = 0; i < 15; i++) {
-      const x = Math.random() * w;
-      const y = h * 0.15 + Math.random() * h * 0.5;
-      const size = 1 + Math.random() * 2;
-      const [sh, ss, sl] = getColor(pal, Math.floor(Math.random() * 4), t);
-      ctx.beginPath();
-      ctx.arc(x, y, size, 0, Math.PI * 2);
-      ctx.fillStyle = hsla(sh, ss, sl + 20, 0.6 + Math.random() * 0.4);
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = hsl(sh, ss, sl);
-      ctx.fill();
-    }
-  }
   ctx.shadowBlur = 0;
 }
 

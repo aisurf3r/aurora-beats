@@ -122,9 +122,10 @@ const Visualizer = () => {
 
   const handleLoadTab = useCallback(async () => {
     if (isMobileOrTablet()) {
-      toast({
-        title: 'Only Desktop',
+      toast('Only Desktop', {
         description: 'TAB audio is only available on desktop browsers.',
+        duration: 2000,
+        style: { fontSize: '13px' },
       });
       return;
     }
