@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAudioAnalyzer } from '@/hooks/useAudioAnalyzer';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { MODES, type PaletteName } from '@/lib/renderModes';
 import { ControlPanel } from '@/components/visualizer/ControlPanel';
 import { Maximize, Minimize } from 'lucide-react';
