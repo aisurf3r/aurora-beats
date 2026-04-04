@@ -77,7 +77,7 @@ export function ControlPanel({
                 <Mic className="w-4 h-4" />
                 <span className="text-[9px] font-display">MIC</span>
               </button>
-              <button onClick={onLoadTab} className="flex flex-col items-center gap-1 p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+              <button onClick={onLoadTab} className="flex flex-col items-center gap-1 p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground focus:outline-none active:bg-muted/50">
                 <Monitor className="w-4 h-4" />
                 <span className="text-[9px] font-display">TAB</span>
               </button>
